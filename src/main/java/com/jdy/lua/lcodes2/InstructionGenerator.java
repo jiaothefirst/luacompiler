@@ -429,12 +429,16 @@ public class InstructionGenerator {
         FunctionInfo subFunc = new FunctionInfo();
         InstructionGenerator instructionGenerator = new InstructionGenerator(subFunc);
         fi.addFunc(subFunc);
+        if (functionBody.isMethod()) {
+            subFunc.addLocVar("self", 0);
+        }
         for (NameExpr nameExpr : functionBody.getParList().getNameExprs()) {
             subFunc.addLocVar(nameExpr.getName(), 0);
         }
-        if (functionBody.isMethod()) {
-            fi.addLocVar("self", 0);
+        if(functionBody.getParList().isHasVararg()){
+           Lcodes.emitCodeABC(subFunc, OP_VARARGPREP,functionBody.getParList().getNameExprs().size(),0,0);
         }
+
         functionBody.getBlock().generate(instructionGenerator, subFunc);
         subFunc.exitScope(subFunc.getPc() + 2);
         Lcodes.emitCodeABC(subFunc, OpCode.OP_RETURN, 0, 1, 0);
@@ -443,6 +447,7 @@ public class InstructionGenerator {
         if(!desc.isGlobalFunc()) {
             Lcodes.emitCodeABx(fi, OpCode.OP_CLOSURE, desc.getReg(), bx);
         }
+        subFunc.setGlobal(desc.isGlobalFunc());
     }
 
     public void generate(LocalStatement statement) {

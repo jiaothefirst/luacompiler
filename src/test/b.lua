@@ -1,6 +1,8 @@
 
 
-function a.b.c.d.e.f.g:h(...)
+function a(...)
+    print(...)
 end
 
-a.b.c.d.e = 1
+
+a(1,2,3,4,5)

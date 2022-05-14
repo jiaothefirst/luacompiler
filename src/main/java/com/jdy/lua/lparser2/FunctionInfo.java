@@ -6,12 +6,14 @@ import com.jdy.lua.lopcodes.Instruction;
 import com.jdy.lua.lopcodes.Instructions;
 import com.jdy.lua.lopcodes.OpCode;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 @Getter
+@Setter
 public class FunctionInfo {
     /**
      * 已经使用的寄存器数量
@@ -46,6 +48,7 @@ public class FunctionInfo {
     int lastLine;
     int numParams;
     boolean isVararg;
+    boolean isGlobal;
 
     public FunctionInfo(){
         isVararg = false;
