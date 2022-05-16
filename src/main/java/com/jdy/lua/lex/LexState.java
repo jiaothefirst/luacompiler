@@ -30,7 +30,6 @@ public class LexState {
      */
     Token currTk = new Token();
 
-
     /**
      * 向前看一个token
      */

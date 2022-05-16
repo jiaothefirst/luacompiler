@@ -11,11 +11,11 @@ public class FuncState {
     FuncState prev;
     LexState lexState;
     BlockCnt blockCnt;
-    int pc;  /* next position to code (equivalent to 'ncode') */
-    int lasttarget;   /* 'label' of last 'jump label' */
-    int previousline;  /* last line that was saved in 'lineinfo' */
-    int numOfConstants;  /* number of elements in 'constants' */
-    int np;  /* number of elements in 'p' */
+    int pc;
+    int lasttarget;
+    int previousline;
+    int numOfConstants;
+    int np;
     /**
      * FuncState中第一个 local var在Dyndata中的下标
      */
@@ -24,13 +24,15 @@ public class FuncState {
      * FuncState中第一个label 在 DynData中的下标
      */
     int firstlabel;
-    int ndebugvars;  /* number of elements in 'f->locvars' */
-    int nactvar;  /* number of active local variables */
-    int nups;  /* number of upvalues */
+    int ndebugvars;
+    int nactvar;
+    /** upVal的数量 */
+    int nups;
     /*当前函数栈的下一个可用位置*/
-    int freereg;  /* first free register */
-    int iwthabs;  /* instructions issued since last absolute line info */
-    boolean needclose;  /* function needs to close upvalues when returning */
+    int freereg;
+    int iwthabs;
+    /**function needs to close upvalues when returning */
+    boolean needclose;
 
     /**
      * 新增指令

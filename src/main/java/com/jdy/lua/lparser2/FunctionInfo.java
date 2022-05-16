@@ -233,7 +233,7 @@ public class FunctionInfo {
 
     public void closeOpnUpval(){
         int a = findMaxClosedUpVal();
-        if(a > 0) {
+        if(a >= 0) {
             Lcodes.emitCodeABC(this, OpCode.OP_CLOSE, a, 0, 0);
         }
     }
@@ -260,7 +260,7 @@ public class FunctionInfo {
         if(hasCaptured){
             return minSlotOfLocVars+1;
         }
-        return 0;
+        return -1;
     }
 
     /**

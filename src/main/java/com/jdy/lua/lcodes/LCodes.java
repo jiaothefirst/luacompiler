@@ -3,7 +3,6 @@ package com.jdy.lua.lcodes;
 import com.jdy.lua.lex.LexState;
 import com.jdy.lua.lobjects.Proto;
 import com.jdy.lua.lobjects.TValue;
-import com.jdy.lua.lobjects.Value;
 import com.jdy.lua.lopcodes.Instruction;
 import com.jdy.lua.lopcodes.Instructions;
 import com.jdy.lua.lopcodes.OpCode;
@@ -20,7 +19,6 @@ import static com.jdy.lua.lopcodes.Instructions.getOpCode;
 import static com.jdy.lua.lopcodes.Instructions.*;
 import static com.jdy.lua.lopcodes.OpCode.*;
 import static com.jdy.lua.lparser.ExpKind.*;
-import static com.jdy.lua.lparser.LParser.breakStat;
 import static com.jdy.lua.lparser.LParser.luaY_nVarsStack;
 import static com.jdy.lua.ltm.TMS.*;
 
@@ -1803,15 +1801,13 @@ public class LCodes {
 
 
     public static void main(String[] args) {
-
-        int j = -1 + OFFSET_sJ;
-      Instruction ins =  create_sJ(OP_JMP.getCode(),j,0);
-        System.out.println(Instructions.getArgsJ(ins));
-      Instruction instruction = new Instruction();
-      Instructions.setOpCode(instruction, OP_JMP);
-        Instructions.setArgsJ(instruction,NO_JUMP);
-        System.out.println(Instructions.getArgsJ(instruction));
-
+          int j = -1 + OFFSET_sJ;
+          Instruction ins =  create_sJ(OP_JMP.getCode(),j,0);
+          System.out.println(Instructions.getArgsJ(ins));
+          Instruction instruction = new Instruction();
+          Instructions.setOpCode(instruction, OP_JMP);
+          Instructions.setArgsJ(instruction,NO_JUMP);
+          System.out.println(Instructions.getArgsJ(instruction));
     }
 
 

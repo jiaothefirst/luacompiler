@@ -1,7 +1,7 @@
 
 
 function a(...)
-    print(...)
+   local a = ...
 end
 
 

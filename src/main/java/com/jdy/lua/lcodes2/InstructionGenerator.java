@@ -1,5 +1,7 @@
 package com.jdy.lua.lcodes2;
 
+import com.jdy.lua.lex.Token;
+import com.jdy.lua.lex.TokenEnum;
 import com.jdy.lua.lobjects.TValue;
 import com.jdy.lua.lopcodes.Instruction;
 import com.jdy.lua.lopcodes.Instructions;
@@ -422,6 +424,7 @@ public class InstructionGenerator {
 
     public void generate(FunctionBody functionBody, ExprDesc desc) {
         FunctionInfo subFunc = new FunctionInfo();
+        subFunc.addLocVar(ENV,0);
         InstructionGenerator instructionGenerator = new InstructionGenerator(subFunc);
         fi.addFunc(subFunc);
         if (functionBody.isMethod()) {
@@ -431,6 +434,7 @@ public class InstructionGenerator {
             subFunc.addLocVar(nameExpr.getName(), 0);
         }
         if(functionBody.getParList().isHasVararg()){
+            subFunc.addLocVar(TokenEnum.VARARG.getStr(),0);
            Lcodes.emitCodeABC(subFunc, OP_VARARGPREP,functionBody.getParList().getNameExprs().size(),0,0);
         }
 
@@ -946,13 +950,6 @@ public class InstructionGenerator {
 
     private ArgAndKind exp2ArgAndKind(FunctionInfo fi, Expr expr, int kind, ExprDesc exprDesc) {
         //去掉无用的嵌套，直接执行里层的表达式
-
-        if (expr instanceof SuffixedExp) {
-            SuffixedExp temp = (SuffixedExp) expr;
-            if (temp.getSuffixedContent() == null) {
-                return exp2ArgAndKind(fi, temp.getPrimaryExr(), kind);
-            }
-        }
         if ((kind & ArgAndKind.ARG_CONST) > 0) {
             int idx = -1;
             if (expr instanceof NilExpr) {
