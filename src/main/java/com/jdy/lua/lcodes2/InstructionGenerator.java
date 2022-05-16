@@ -16,11 +16,17 @@ import java.util.List;
 import static com.jdy.lua.lcodes.BinOpr.*;
 import static com.jdy.lua.lopcodes.OpCode.*;
 
-@SuppressWarnings("all")
 public class InstructionGenerator {
 
     private FunctionInfo fi;
 
+    /**
+     * 用于存储环境相关信息的表名称
+     */
+    public static final String ENV = "_ENV";
+    /**
+     * 执行Statement时， exprLevel总是为0
+     */
     private int exprLevel = 0;
 
     private boolean isStatement() {
@@ -49,13 +55,6 @@ public class InstructionGenerator {
         desc.getTrueLabel().fixJump2Pc(trueJmp);
     }
 
-    public ExprDesc generateExpr(Expr expr) {
-        exprLevel++;
-        expr.generate(this);
-        ExprDesc desc = new ExprDesc();
-        exprLevel--;
-        return desc;
-    }
 
     public void generateLogicStatement(Expr expr, VirtualLabel trueLabel, VirtualLabel falseLabel, ExprDesc desc) {
         desc.setTrueLabel(trueLabel);
@@ -162,14 +161,14 @@ public class InstructionGenerator {
                 Lcodes.emitCodeABC(fi, OpCode.OP_SETUPVAL, funcReg, b, 0);
                 return;
             }
-            int env = fi.slotOfLocVar("_ENV");
+            int env = fi.slotOfLocVar(ENV);
             if (env >= 0) {
                 b = fi.indexOfConstant(TValue.strValue(varName));
                 Lcodes.emitCodeABC(fi, OpCode.OP_SETFIELD, env, b, funcReg);
                 return;
             }
             //全局变量
-            env = fi.indexOfUpval("_ENV");
+            env = fi.indexOfUpval(ENV);
             Lcodes.emitCodeABC(fi, OP_SETUPVAL, env, b, funcReg);
         }
     }
@@ -362,11 +361,7 @@ public class InstructionGenerator {
             for (int i = 0; i <nVars; i++) {
                 Expr exp = exprs.get(i);
                 int a = fi.allocReg();
-                if (i >= nVars && i == nExps - 1 && hasMultiRet(exp)) {
-                    exp.generate(this, createDesc(a, 0));
-                } else {
-                    exp.generate(this, createDesc(a, 1));
-                }
+                exp.generate(this, createDesc(a, 1));
             }
         } else {
             boolean multRet = false;
@@ -410,14 +405,14 @@ public class InstructionGenerator {
                 Lcodes.emitCodeABC(fi, OpCode.OP_SETUPVAL, varRegs[i], b, 0);
                 continue;
             }
-            int env = fi.slotOfLocVar("_ENV");
+            int env = fi.slotOfLocVar(ENV);
             if (env >= 0) {
                 b = fi.indexOfConstant(TValue.strValue(varName));
                 Lcodes.emitCodeABC(fi, OpCode.OP_SETFIELD, env, b, varRegs[i]);
                 continue;
             }
             //全局变量
-            env = fi.indexOfUpval("_ENV");
+            env = fi.indexOfUpval(ENV);
             b = fi.indexOfConstant(TValue.strValue(varName));
             Lcodes.emitCodeABC(fi, OP_SETTABUP, env, b, varRegs[i]);
         }
@@ -468,15 +463,15 @@ public class InstructionGenerator {
             boolean hasMulRet = false;
             for (int i = 0; i < nExps; i++) {
                 Expr expr = exprList.get(i);
-                int tempReg = fi.allocReg();
+                int reg = fi.allocReg();
                 if (i == nExps - 1 && hasMultiRet(expr)) {
                     hasMulRet = true;
                     int n = nNames - nExps + 1;
-                    expr.generate(this, createDesc(tempReg, n));
+                    expr.generate(this, createDesc(reg, n));
                     //为多个返回值，分配空间
                     fi.allocReg(n - 1);
                 } else {
-                    expr.generate(this, createDesc(tempReg, 1));
+                    expr.generate(this, createDesc(reg, 1));
                 }
             }
             //置nil
@@ -677,12 +672,12 @@ public class InstructionGenerator {
         }
         for (int i = 0; i < exprList.size(); i++) {
             Expr ex = exprList.get(i);
-            int tempReg = fi.allocReg();
+            int reg = fi.allocReg();
             if (i == exprList.size() - 1 && hasMultiRet(ex)) {
                 hasMultiRet = true;
-                ex.generate(this, createDesc(tempReg, -1));
+                ex.generate(this, createDesc(reg, -1));
             } else {
-                ex.generate(this, createDesc(tempReg, -1));
+                ex.generate(this, createDesc(reg, 1));
             }
         }
         fi.freeReg(nArgs);
@@ -697,22 +692,7 @@ public class InstructionGenerator {
         return nArgs;
     }
 
-    /**
-     * exrp[key] =valu
-     */
-    private void tableSet(Expr t, Expr k, Expr v) {
-        int oldRegs = fi.getUsedRegs();
-        ArgAndKind argAndKind = exp2ArgAndKind(fi, t, ArgAndKind.ARG_RU);
-        int a = argAndKind.getArg();
-        int b = exp2ArgAndKind(fi, k, ArgAndKind.ARG_RK).getArg();
-        int c = exp2ArgAndKind(fi, v, ArgAndKind.ARG_REG).getArg();
-        if (argAndKind.getKind() == ArgAndKind.ARG_REG) {
-            Lcodes.emitCodeABC(fi, OpCode.OP_SETTABLE, a, b, c);
-        } else {
-            Lcodes.emitCodeABC(fi, OpCode.OP_SETTABUP, a, b, c);
-        }
-        fi.setUsedRegs(oldRegs);
-    }
+
 
     /**
      * 当在左边出现 talbe[key]说明是赋值，
@@ -765,7 +745,7 @@ public class InstructionGenerator {
         }
         //env['name'],env存放全局的东西，使用字符串常量去存放内容
         //同时也有env[env]=env的规则，env是最外层函数的一个'local var'
-        NameExpr expr1 = new NameExpr("_ENV");
+        NameExpr expr1 = new NameExpr(ENV);
         tableAccess(expr1, new StringExpr(expr.getName()),desc.getReg());
     }
 
@@ -964,7 +944,7 @@ public class InstructionGenerator {
         Lcodes.emitCodeK(fi, exprDesc.getReg(), k);
     }
 
-    public ArgAndKind exp2ArgAndKind(FunctionInfo fi, Expr expr, int kind, ExprDesc exprDesc) {
+    private ArgAndKind exp2ArgAndKind(FunctionInfo fi, Expr expr, int kind, ExprDesc exprDesc) {
         //去掉无用的嵌套，直接执行里层的表达式
 
         if (expr instanceof SuffixedExp) {
@@ -1024,14 +1004,10 @@ public class InstructionGenerator {
     public ArgAndKind exp2ArgAndKind(FunctionInfo fi, Expr expr, int kind) {
         return exp2ArgAndKind(fi, expr, kind, null);
     }
-    public ExprDesc createDesc(int a){
+
+    private ExprDesc createDesc(int reg, int n) {
         ExprDesc exprDesc = new ExprDesc();
-        exprDesc.setReg(a);
-        return exprDesc;
-    }
-    public ExprDesc createDesc(int a, int n) {
-        ExprDesc exprDesc = new ExprDesc();
-        exprDesc.setReg(a);
+        exprDesc.setReg(reg);
         exprDesc.setN(n);
         return exprDesc;
     }
