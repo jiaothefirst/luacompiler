@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import static com.jdy.lua.lcodes.BinOpr.getBinopr;
 import static com.jdy.lua.lex.Lex.*;
 import static com.jdy.lua.lex.TokenEnum.*;
-import static com.jdy.lua.lparser2.expr.SuffixedExp.SuffixedContent;
 
 public class LParser {
     public static boolean blockFollow(LexState ls,boolean withUntil){
