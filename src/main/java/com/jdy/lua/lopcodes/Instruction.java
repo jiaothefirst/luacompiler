@@ -1,7 +1,5 @@
 package com.jdy.lua.lopcodes;
 
-import javax.management.openmbean.OpenMBeanOperationInfo;
-
 import static com.jdy.lua.lopcodes.Instructions.*;
 import static com.jdy.lua.lopcodes.OpCode.OP_EQI;
 import static com.jdy.lua.lopcodes.OpCode.OP_GEI;
